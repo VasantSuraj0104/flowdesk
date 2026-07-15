@@ -1,0 +1,271 @@
+{
+  "name": "Factors — Notion → branded social image (2 triggers)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "factors-render",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-464, 220],
+      "id": "aa11bb22-cc33-dd44-ee55-ff6677889900",
+      "name": "Webhook — manual run",
+      "webhookId": "factors-render-manual"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalizes the app's POST body into the exact flat shape the Parse node\n// already expects (Type / Background / content / assets + an `id`).\n// This is why the Parse node below needs ZERO changes.\n\nconst b = $json.body || $json;\n\nlet assets = b.assets;\nif (Array.isArray(assets)) {\n  assets = assets.filter(Boolean);\n} else if (typeof assets === 'string' && assets.trim()) {\n  assets = assets.split(',').map(function (s) { return s.trim(); }).filter(Boolean);\n} else {\n  assets = [];\n}\n\n// `manual-` prefix is the flag the \"Manual run?\" IF node checks later.\nreturn [{ json: {\n  id: 'manual-' + Date.now(),\n  Type: b.type || b.Type || 'text',\n  Background: b.background || b.Background || 'teal',\n  content: b.content || b.Content || '',\n  assets: assets\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-240, 220],
+      "id": "bb22cc33-dd44-ee55-ff66-778899001122",
+      "name": "Normalize webhook input"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Factors social-render — reads Notion Type + Background dropdowns (Simplify ON)\n// Type -> template ; Background -> variant color ; assets -> images (engine classifies)\n\nconst TEMPLATE_BASE_URL = \"https://factors-templates.small-band-469e.workers.dev\";\n\n// Type dropdown -> template file + default format\nconst TYPE_MAP = {\n  text:        { tpl:\"quote\",       w:1080, h:1080 },\n  quote:       { tpl:\"quote\",       w:1080, h:1080 },\n  stat:        { tpl:\"stat\",        w:1080, h:1080 },\n  testimonial: { tpl:\"testimonial\", w:1920, h:1080 },\n  illustration:{ tpl:\"illustration\",w:1080, h:1080 },\n  \"creative-billboard\":{ tpl:\"creative-billboard\", w:1080, h:1080 },\n  \"billboard-wide\":{ tpl:\"billboard-wide\", w:1600, h:1080 },\n};\nconst VARIANTS = [\"red\",\"teal\",\"amber\",\"green\",\"orange\",\"blue\",\"paper\"];\n\n// read flat fields (Simplify ON). Falls back across naming styles.\nfunction prop(name){\n  let v = $json[name];\n  if (v == null) v = $json[\"property_\" + name];\n  if (v == null) v = $json[\"property_\" + name.toLowerCase()];\n  if (v == null) return \"\";\n  if (Array.isArray(v)) return v;\n  return v;\n}\n\nconst typeRaw = String(prop(\"Type\") || prop(\"type\") || \"text\").toLowerCase().trim();\nconst bgRaw   = String(prop(\"Background\") || prop(\"background\") || \"teal\").toLowerCase().trim();\nconst contentRaw = String(prop(\"content\") || prop(\"Content\") || \"\");\nlet assets = prop(\"assets\"); if(!Array.isArray(assets)) assets = prop(\"Assets\"); if(!Array.isArray(assets)) assets = assets?[assets]:[];\n\nconst t = TYPE_MAP[typeRaw] || TYPE_MAP.text;\nconst variant = VARIANTS.indexOf(bgRaw) >= 0 ? bgRaw : \"teal\";\nconst w = t.w, h = t.h;\n\n// parse content: first non-key line(s) = body; \"key: value\" lines fill fields\nconst fields = { body:\"\", underline:\"\", eyebrow:\"\", stat:\"\", stat_label:\"\", name:\"\", role:\"\", footer:\"www.factors.ai\" };\nconst KEYS = { underline:\"underline\", eyebrow:\"eyebrow\", stat:\"stat\", label:\"stat_label\",\n               name:\"name\", role:\"role\", cta:\"footer\", footer:\"footer\" };\nlet bodyLines=[];\nString(contentRaw).split(\"\\n\").forEach(function(line){\n  const m = line.match(/^\\s*([a-zA-Z ]+):\\s*(.+)$/);\n  if (m && KEYS[m[1].trim().toLowerCase()]) fields[KEYS[m[1].trim().toLowerCase()]] = m[2].trim();\n  else if (line.trim()) bodyLines.push(line.trim());\n});\nfields.body = bodyLines.join(\" \");\nif (fields.underline && fields.body.indexOf(fields.underline) < 0) fields.underline = \"\";\n\n// build query string (no URLSearchParams in the sandbox)\nfunction enc(v){ return encodeURIComponent(v==null?\"\":String(v)); }\nconst params = {\n  variant:variant, w:String(w), h:String(h),\n  body:fields.body, underline:fields.underline, eyebrow:fields.eyebrow,\n  stat:fields.stat, stat_label:fields.stat_label, foot:fields.footer,\n  name:fields.name, role:fields.role,\n  assets: assets.join(\",\"),        // testimonial: engine classifies headshot vs logos\n  partner: assets[0] || \"\"         // back-compat\n};\nlet qs=[]; for (const k in params){ qs.push(enc(k)+\"=\"+enc(params[k])); }\nconst renderUrl = TEMPLATE_BASE_URL + \"/\" + t.tpl + \".html?\" + qs.join(\"&\");\n\nconst browserless = {\n  url: renderUrl, options:{ type:\"png\", fullPage:false },\n  viewport:{ width:w, height:h, deviceScaleFactor:2 },\n  gotoOptions:{ waitUntil:\"networkidle0\" }\n};\n\nconst pageId = $json.id || $json.pageId;\nconst imgKey = (String(pageId) + \"-\" + Date.now() + \".png\").replace(/[^a-zA-Z0-9._-]/g,\"_\");\n\nreturn [{ json: {\n  pageId:pageId, type:typeRaw, template:t.tpl, variant:variant, w:w, h:h,\n  fields:fields, renderUrl:renderUrl, browserless:browserless, imgKey:imgKey\n}}];"
+      },
+      "id": "c9e61f57-49a3-4d44-9ff5-d12b91e972bd",
+      "name": "Parse prompt + content → render job",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [208, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://chromium-production-9118.up.railway.app/screenshot?token=fx_render_9182",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.browserless) }}",
+        "options": {
+          "response": { "response": { "responseFormat": "file" } }
+        }
+      },
+      "id": "8566ac69-0c70-468f-adf3-ab0f9934efda",
+      "name": "Browserless — render PNG",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [432, 0]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://factors-images.small-band-469e.workers.dev/upload?key={{ $('Parse prompt + content → render job').item.json.imgKey }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-auth", "value": "Marketing@1234" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "id": "8668031c-28ac-4d2a-a265-4d86510cbe97",
+      "name": "Upload PNG → Cloudflare KV",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [656, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "manual-check-0001",
+              "leftValue": "={{ $('Parse prompt + content → render job').item.json.pageId }}",
+              "rightValue": "manual-",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [880, 0],
+      "id": "cc33dd44-ee55-ff66-7788-990011223344",
+      "name": "Manual run?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, url: $json.url, imgKey: $('Parse prompt + content → render job').item.json.imgKey, template: $('Parse prompt + content → render job').item.json.template, variant: $('Parse prompt + content → render job').item.json.variant, width: $('Parse prompt + content → render job').item.json.w, height: $('Parse prompt + content → render job').item.json.h }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1104, -120],
+      "id": "dd44ee55-ff66-7788-9900-112233445566",
+      "name": "Respond — return image URL"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Parse prompt + content → render job').item.json.pageId }}",
+          "mode": "id",
+          "__regex": "^([0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12})"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Image|files",
+              "fileUrls": {
+                "fileUrl": [
+                  {
+                    "name": "={{ $('Parse prompt + content → render job').item.json.imgKey }}",
+                    "url": "={{ $json.url }}"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3200c6fa-16ce-403b-8108-207e989b0386",
+      "name": "Notion — set Image + untick Generate",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [1104, 120],
+      "credentials": {
+        "notionApi": { "id": "cBDABzupxevHN0yP", "name": "Notion account" }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "390103b0-f5a3-8089-ba14-f66fe397b493",
+          "mode": "list",
+          "cachedResultName": "Social Creatives",
+          "cachedResultUrl": "https://app.notion.com/p/390103b0f5a38089ba14f66fe397b493"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [-240, 0],
+      "id": "1fe42941-7388-4393-9f2e-b3e632273c2b",
+      "name": "Get many database pages",
+      "credentials": {
+        "notionApi": { "id": "cBDABzupxevHN0yP", "name": "Notion account" }
+      }
+    },
+    {
+      "parameters": {
+        "rule": { "interval": [ { "field": "minutes", "minutesInterval": 2 } ] }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [-464, 0],
+      "id": "2ef06ba9-4149-441e-8abb-ce569f215f5c",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "466f3237-7c73-4de6-934d-d2150fbf2535",
+              "leftValue": "={{ $json.property_generate }}",
+              "rightValue": "",
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            },
+            {
+              "id": "a696d6d2-7fe9-461a-85ab-deb79350c11b",
+              "leftValue": "={{ $json.property_image[0] }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "empty", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [-16, 0],
+      "id": "74c14556-fac8-491a-8f8c-4a3aa5a9a318",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook — manual run": {
+      "main": [[{ "node": "Normalize webhook input", "type": "main", "index": 0 }]]
+    },
+    "Normalize webhook input": {
+      "main": [[{ "node": "Parse prompt + content → render job", "type": "main", "index": 0 }]]
+    },
+    "Schedule Trigger": {
+      "main": [[{ "node": "Get many database pages", "type": "main", "index": 0 }]]
+    },
+    "Get many database pages": {
+      "main": [[{ "node": "If", "type": "main", "index": 0 }]]
+    },
+    "If": {
+      "main": [[{ "node": "Parse prompt + content → render job", "type": "main", "index": 0 }]]
+    },
+    "Parse prompt + content → render job": {
+      "main": [[{ "node": "Browserless — render PNG", "type": "main", "index": 0 }]]
+    },
+    "Browserless — render PNG": {
+      "main": [[{ "node": "Upload PNG → Cloudflare KV", "type": "main", "index": 0 }]]
+    },
+    "Upload PNG → Cloudflare KV": {
+      "main": [[{ "node": "Manual run?", "type": "main", "index": 0 }]]
+    },
+    "Manual run?": {
+      "main": [
+        [{ "node": "Respond — return image URL", "type": "main", "index": 0 }],
+        [{ "node": "Notion — set Image + untick Generate", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8ddf8fc772626570bbc34fc4738b4f28be14d2d1761d12a5da016e531ac07a46"
+  },
+  "tags": []
+}
