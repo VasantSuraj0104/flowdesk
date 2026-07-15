@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/Button";
 import { Card, SectionLabel, StatusDot } from "@/components/ui";
 import { IconPlay, IconPhoto } from "@/components/icons";
+import { AssetUploader, Asset } from "@/components/AssetUploader";
 import { RunStatus, STATUS_META } from "@/lib/status";
 
 // These mirror TYPE_MAP and VARIANTS in the workflow's Parse node exactly.
@@ -36,17 +37,24 @@ export function FactorsDetail() {
   const [type, setType] = useState("stat");
   const [background, setBackground] = useState("teal");
   const [content, setContent] = useState("");
-  const [assets, setAssets] = useState("");
+  const [assets, setAssets] = useState<Asset[]>([]);
 
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ url: string; template: string } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<{
+    url: string;
+    template: string;
+    timings?: Record<string, number>;
+  } | null>(null);
+  const [error, setError] = useState<{ message: string; step?: string } | null>(
+    null
+  );
   const [runs, setRuns] = useState<Run[]>([]);
 
   const selected = TYPES.find((t) => t.value === type)!;
+  const uploading = assets.some((a) => a.status === "uploading");
 
   async function runNow() {
-    if (busy || !content.trim()) return;
+    if (busy || !content.trim() || uploading) return;
     setBusy(true);
     setError(null);
     setResult(null);
@@ -62,15 +70,28 @@ export function FactorsDetail() {
       const res = await fetch("/api/automations/factors/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, background, content, assets }),
+        body: JSON.stringify({
+          type,
+          background,
+          content,
+          // Only completed uploads, in display order — assets[0] is the headshot.
+          assets: assets.filter((a) => a.status === "done").map((a) => a.url),
+        }),
       });
       const data = await res.json();
 
       if (!res.ok || !data.ok) {
-        throw new Error(data.error || `Request failed (${res.status})`);
+        const e = new Error(data.error || `Request failed (${res.status})`);
+        // The engine tells us which step blew up — surface it.
+        (e as Error & { step?: string }).step = data.step;
+        throw e;
       }
 
-      setResult({ url: data.url, template: data.template });
+      setResult({
+        url: data.url,
+        template: data.template,
+        timings: data.timings,
+      });
       setRuns((prev) =>
         prev.map((r) =>
           r.id === id ? { ...r, status: "success", url: data.url, at: "just now" } : r
@@ -78,7 +99,8 @@ export function FactorsDetail() {
       );
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Something went wrong.";
-      setError(msg);
+      const step = (e as Error & { step?: string }).step;
+      setError({ message: msg, step });
       setRuns((prev) =>
         prev.map((r) =>
           r.id === id ? { ...r, status: "failed", error: msg, at: "just now" } : r
@@ -112,11 +134,11 @@ export function FactorsDetail() {
         <Button
           variant="primary"
           onClick={runNow}
-          disabled={busy || !content.trim()}
+          disabled={busy || !content.trim() || uploading}
           className="ml-auto shrink-0"
         >
           <IconPlay size={16} />
-          {busy ? "Rendering…" : "Run now"}
+          {busy ? "Rendering…" : uploading ? "Uploading…" : "Run now"}
         </Button>
       </header>
 
@@ -179,16 +201,15 @@ export function FactorsDetail() {
           <label className="block text-[13px] text-text-muted mb-1.5">
             Assets <span className="text-text-muted">(optional)</span>
           </label>
-          <input
-            value={assets}
-            onChange={(e) => setAssets(e.target.value)}
-            placeholder="https://…/headshot.png, https://…/logo.png"
-            className={inputCls}
+          <AssetUploader
+            assets={assets}
+            onChange={setAssets}
+            hint={
+              type === "testimonial"
+                ? "First image = headshot, the rest = logos. Drag to reorder."
+                : "PNG, JPG, WebP or SVG · up to 5MB each"
+            }
           />
-          <p className="text-[12px] text-text-muted mt-1.5">
-            Comma-separated URLs. Testimonials classify headshot vs logos
-            automatically.
-          </p>
         </Card>
 
         {/* ---------- OUTPUT ---------- */}
@@ -209,10 +230,14 @@ export function FactorsDetail() {
               {!busy && error && (
                 <div className="text-center px-4 py-6">
                   <p className="text-[13px] text-danger font-medium">
-                    Render failed
+                    {error.step === "render"
+                      ? "Render failed"
+                      : error.step === "upload"
+                      ? "Upload failed"
+                      : "Run failed"}
                   </p>
                   <p className="text-[12px] text-text-muted mt-1.5 break-words">
-                    {error}
+                    {error.message}
                   </p>
                 </div>
               )}
@@ -235,6 +260,13 @@ export function FactorsDetail() {
                 </div>
               )}
             </div>
+
+            {result?.timings && (
+              <p className="text-[11px] text-text-muted mt-2.5">
+                render {result.timings.render}ms · upload {result.timings.upload}ms
+                · total {result.timings.total}ms
+              </p>
+            )}
 
             {result && (
               <div className="flex items-center gap-2 mt-3">
