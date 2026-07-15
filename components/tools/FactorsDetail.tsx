@@ -2,175 +2,290 @@
 
 import { useState } from "react";
 import { Button } from "@/components/Button";
-import { Card, Chip, Pill, SectionLabel, StatusDot } from "@/components/ui";
-import { IconSettings, IconPlay } from "@/components/icons";
+import { Card, SectionLabel, StatusDot } from "@/components/ui";
+import { IconPlay, IconPhoto } from "@/components/icons";
 import { RunStatus, STATUS_META } from "@/lib/status";
 
-const CONFIG = [
-  { k: "Notion database", v: "Social Creatives" },
-  { k: "Trigger", v: "Schedule · 2 min" },
-  { k: "Runs when", v: "generate = true · image empty" },
-  { k: "Render service", v: "Browserless · Chromium" },
-  { k: "Storage", v: "Cloudflare KV" },
+// These mirror TYPE_MAP and VARIANTS in the workflow's Parse node exactly.
+const TYPES = [
+  { value: "text", label: "Text", w: 1080, h: 1080, keys: "underline, eyebrow" },
+  { value: "quote", label: "Quote", w: 1080, h: 1080, keys: "underline, eyebrow" },
+  { value: "stat", label: "Stat", w: 1080, h: 1080, keys: "stat, label" },
+  { value: "testimonial", label: "Testimonial", w: 1920, h: 1080, keys: "name, role" },
+  { value: "illustration", label: "Illustration", w: 1080, h: 1080, keys: "eyebrow" },
+  { value: "creative-billboard", label: "Creative billboard", w: 1080, h: 1080, keys: "eyebrow" },
+  { value: "billboard-wide", label: "Billboard wide", w: 1600, h: 1080, keys: "eyebrow" },
 ];
 
-const TEMPLATE_TYPES = [
-  "quote",
-  "stat",
-  "testimonial",
-  "illustration",
-  "creative-billboard",
-  "billboard-wide",
-];
 const VARIANTS = ["red", "teal", "amber", "green", "orange", "blue", "paper"];
 
 interface Run {
   id: number;
-  name: string;
+  label: string;
   status: RunStatus;
-  time: string;
+  url?: string;
+  error?: string;
+  at: string;
 }
 
-const INITIAL_RUNS: Run[] = [
-  { id: 1, name: "Q3 retention stat", status: "success", time: "2m" },
-  { id: 2, name: "Customer testimonial", status: "running", time: "now" },
-  { id: 3, name: "Launch billboard-wide", status: "success", time: "14m" },
-  { id: 4, name: "Founder quote", status: "failed", time: "1h" },
-  { id: 5, name: "Weekly stat card", status: "success", time: "2h" },
-];
+const PLACEHOLDER = `Retention jumped 40% after switching
+stat: 40%
+label: retention lift`;
 
 export function FactorsDetail() {
-  const [runs, setRuns] = useState<Run[]>(INITIAL_RUNS);
-  const [busy, setBusy] = useState(false);
+  const [type, setType] = useState("stat");
+  const [background, setBackground] = useState("teal");
+  const [content, setContent] = useState("");
+  const [assets, setAssets] = useState("");
 
-  // Manual start point. This is where the real POST to the n8n webhook goes:
-  //   await fetch("/api/automations/factors/run", { method: "POST" })
-  // For now we optimistically add a run and simulate completion so the UI is live.
-  function runNow() {
-    if (busy) return;
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ url: string; template: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [runs, setRuns] = useState<Run[]>([]);
+
+  const selected = TYPES.find((t) => t.value === type)!;
+
+  async function runNow() {
+    if (busy || !content.trim()) return;
     setBusy(true);
+    setError(null);
+    setResult(null);
+
     const id = Date.now();
+    const label = content.split("\n")[0].slice(0, 40) || "Untitled";
     setRuns((prev) => [
-      { id, name: "Manual run", status: "running", time: "now" },
+      { id, label, status: "running", at: "now" },
       ...prev,
     ]);
-    setTimeout(() => {
+
+    try {
+      const res = await fetch("/api/automations/factors/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, background, content, assets }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || `Request failed (${res.status})`);
+      }
+
+      setResult({ url: data.url, template: data.template });
       setRuns((prev) =>
         prev.map((r) =>
-          r.id === id ? { ...r, status: "success", time: "just now" } : r
+          r.id === id ? { ...r, status: "success", url: data.url, at: "just now" } : r
         )
       );
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Something went wrong.";
+      setError(msg);
+      setRuns((prev) =>
+        prev.map((r) =>
+          r.id === id ? { ...r, status: "failed", error: msg, at: "just now" } : r
+        )
+      );
+    } finally {
       setBusy(false);
-    }, 2000);
+    }
   }
+
+  const inputCls =
+    "w-full bg-surface2 border border-border rounded-lg px-3 py-2 text-[13px] " +
+    "text-text placeholder:text-text-muted outline-none focus:border-primary transition-colors";
 
   return (
     <div>
       <header className="flex items-center gap-3 flex-wrap p-4 md:px-[22px] border-b border-border">
         <div className="flex items-start gap-3 min-w-0 flex-1">
           <span className="w-[38px] h-[38px] rounded-[10px] bg-primary/10 text-primary flex items-center justify-center shrink-0">
-            <IconSettings size={20} />
+            <IconPhoto size={20} />
           </span>
           <div className="min-w-0">
             <h1 className="font-display text-[19px] font-medium leading-tight">
               Factors — branded social image
             </h1>
-            <div className="text-[13px] text-text-muted mt-1 flex items-center gap-2 flex-wrap">
-              <Chip>Notion</Chip>
-              <span>Polls every 2 min · generates PNG from page fields</span>
-            </div>
+            <p className="text-[13px] text-text-muted mt-1">
+              Fill the fields, hit Run now — the PNG comes back here.
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-2.5 shrink-0 ml-auto">
-          <Button variant="icon" aria-label="Configure">
-            <IconSettings size={18} />
-          </Button>
-          <Button variant="primary" onClick={runNow} disabled={busy}>
-            <IconPlay size={16} />
-            {busy ? "Running…" : "Run now"}
-          </Button>
-        </div>
+        <Button
+          variant="primary"
+          onClick={runNow}
+          disabled={busy || !content.trim()}
+          className="ml-auto shrink-0"
+        >
+          <IconPlay size={16} />
+          {busy ? "Rendering…" : "Run now"}
+        </Button>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] gap-4 p-4 md:p-[22px]">
-        <div className="flex flex-col gap-4">
-          <Card>
-            <SectionLabel>CONFIGURATION</SectionLabel>
-            {CONFIG.map((row, i) => (
-              <div
-                key={row.k}
-                className={`flex justify-between items-center gap-2.5 py-2.5 text-[13px] ${
-                  i < CONFIG.length - 1 ? "border-b border-border" : ""
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-4 p-4 md:p-[22px]">
+        {/* ---------- INPUT ---------- */}
+        <Card>
+          <SectionLabel>INPUT</SectionLabel>
+
+          <label className="block text-[13px] text-text-muted mb-1.5">Type</label>
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            className={`${inputCls} mb-1.5`}
+          >
+            {TYPES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-[12px] text-text-muted mb-4">
+            Output {selected.w}×{selected.h} · supports keys: {selected.keys}
+          </p>
+
+          <label className="block text-[13px] text-text-muted mb-1.5">
+            Background
+          </label>
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {VARIANTS.map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setBackground(v)}
+                className={`text-xs rounded-md px-2.5 py-1 border transition-colors ${
+                  background === v
+                    ? "bg-primary text-white border-primary"
+                    : "bg-surface2 text-text border-border hover:border-text-muted"
                 }`}
               >
-                <span className="text-text-muted">{row.k}</span>
-                <span className="text-right">{row.v}</span>
-              </div>
+                {v}
+              </button>
             ))}
-          </Card>
+          </div>
 
-          <Card>
-            <SectionLabel>TEMPLATE TYPES</SectionLabel>
-            <div className="flex flex-wrap gap-1.5">
-              {TEMPLATE_TYPES.map((t) => (
-                <Pill key={t}>{t}</Pill>
-              ))}
-            </div>
-            <div className="mt-3.5">
-              <SectionLabel>BACKGROUND VARIANTS</SectionLabel>
-              <div className="flex flex-wrap gap-1.5">
-                {VARIANTS.map((v) => (
-                  <Pill key={v}>{v}</Pill>
-                ))}
-              </div>
-            </div>
-          </Card>
-        </div>
+          <label className="block text-[13px] text-text-muted mb-1.5">
+            Content
+          </label>
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            rows={6}
+            placeholder={PLACEHOLDER}
+            className={`${inputCls} resize-y font-mono leading-relaxed`}
+          />
+          <p className="text-[12px] text-text-muted mt-1.5 mb-4">
+            First lines = body. Add <code className="text-text">key: value</code>{" "}
+            lines for the rest.
+          </p>
 
+          <label className="block text-[13px] text-text-muted mb-1.5">
+            Assets <span className="text-text-muted">(optional)</span>
+          </label>
+          <input
+            value={assets}
+            onChange={(e) => setAssets(e.target.value)}
+            placeholder="https://…/headshot.png, https://…/logo.png"
+            className={inputCls}
+          />
+          <p className="text-[12px] text-text-muted mt-1.5">
+            Comma-separated URLs. Testimonials classify headshot vs logos
+            automatically.
+          </p>
+        </Card>
+
+        {/* ---------- OUTPUT ---------- */}
         <div className="flex flex-col gap-4">
-          <Card>
-            <div className="flex justify-between items-center mb-1.5">
-              <SectionLabel>STATUS</SectionLabel>
-              <span className="text-[12px] text-accent flex items-center gap-1.5">
-                <StatusDot status="success" />
-                Enabled
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-2.5 mt-2.5">
-              <div className="bg-surface2 rounded-[9px] p-2.5">
-                <div className="text-[12px] text-text-muted">Runs today</div>
-                <div className="text-[22px] font-medium mt-0.5">24</div>
-              </div>
-              <div className="bg-surface2 rounded-[9px] p-2.5">
-                <div className="text-[12px] text-text-muted">Success</div>
-                <div className="text-[22px] font-medium mt-0.5 text-accent">
-                  96%
+          <Card className="flex flex-col">
+            <SectionLabel>OUTPUT</SectionLabel>
+
+            <div className="flex-1 flex items-center justify-center bg-surface2 rounded-[9px] min-h-[240px] overflow-hidden">
+              {busy && (
+                <div className="text-center px-4">
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                  <p className="text-[13px] text-text-muted">
+                    Rendering in n8n…
+                  </p>
                 </div>
-              </div>
+              )}
+
+              {!busy && error && (
+                <div className="text-center px-4 py-6">
+                  <p className="text-[13px] text-danger font-medium">
+                    Render failed
+                  </p>
+                  <p className="text-[12px] text-text-muted mt-1.5 break-words">
+                    {error}
+                  </p>
+                </div>
+              )}
+
+              {!busy && !error && result && (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={result.url}
+                  alt="Rendered social image"
+                  className="max-w-full max-h-[320px] object-contain"
+                />
+              )}
+
+              {!busy && !error && !result && (
+                <div className="text-center px-4 py-6">
+                  <IconPhoto size={26} className="text-text-muted mx-auto mb-2.5" />
+                  <p className="text-[13px] text-text-muted">
+                    Your rendered image will appear here.
+                  </p>
+                </div>
+              )}
             </div>
+
+            {result && (
+              <div className="flex items-center gap-2 mt-3">
+                <a
+                  href={result.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[12px] text-primary hover:underline truncate flex-1"
+                >
+                  {result.url}
+                </a>
+                <a
+                  href={result.url}
+                  download
+                  className="text-[12px] text-text-muted hover:text-text shrink-0"
+                >
+                  Download
+                </a>
+              </div>
+            )}
           </Card>
 
           <Card>
-            <SectionLabel>RUN HISTORY</SectionLabel>
-            {runs.map((r, i) => (
-              <div
-                key={r.id}
-                className={`flex items-center gap-2.5 py-2.5 ${
-                  i < runs.length - 1 ? "border-b border-border" : ""
-                }`}
-              >
-                <StatusDot status={r.status} />
-                <span className="text-[13px] flex-1 min-w-0 truncate">
-                  {r.name}
-                </span>
-                <span className={`text-[12px] shrink-0 ${STATUS_META[r.status].text}`}>
-                  {STATUS_META[r.status].label}
-                </span>
-                <span className="text-[12px] text-text-muted w-[50px] text-right shrink-0">
-                  {r.time}
-                </span>
-              </div>
-            ))}
+            <SectionLabel>THIS SESSION</SectionLabel>
+            {runs.length === 0 ? (
+              <p className="text-[13px] text-text-muted py-2">
+                No runs yet. Persistent history arrives when we add the database.
+              </p>
+            ) : (
+              runs.map((r, i) => (
+                <div
+                  key={r.id}
+                  className={`flex items-center gap-2.5 py-2.5 ${
+                    i < runs.length - 1 ? "border-b border-border" : ""
+                  }`}
+                >
+                  <StatusDot status={r.status} />
+                  <span className="text-[13px] flex-1 min-w-0 truncate">
+                    {r.label}
+                  </span>
+                  <span
+                    className={`text-[12px] shrink-0 ${STATUS_META[r.status].text}`}
+                  >
+                    {STATUS_META[r.status].label}
+                  </span>
+                  <span className="text-[12px] text-text-muted w-[62px] text-right shrink-0">
+                    {r.at}
+                  </span>
+                </div>
+              ))
+            )}
           </Card>
         </div>
       </div>
