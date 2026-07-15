@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/Button";
 import { Card, SectionLabel, StatusDot } from "@/components/ui";
 import { IconPlay, IconPhoto } from "@/components/icons";
+import { FactorsLogo } from "@/components/FactorsLogo";
 import { AssetUploader, Asset } from "@/components/AssetUploader";
 import { fetchJson } from "@/lib/safeJson";
 import {
@@ -119,8 +120,8 @@ export function FactorsDetail() {
     <div>
       <header className="flex items-center gap-3 flex-wrap p-4 md:px-[22px] border-b border-border">
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          <span className="w-[38px] h-[38px] rounded-[10px] bg-primary/10 text-primary flex items-center justify-center shrink-0">
-            <IconPhoto size={20} />
+          <span className="w-[38px] h-[38px] rounded-[10px] bg-[#FC3B2D]/10 flex items-center justify-center shrink-0">
+            <FactorsLogo size={20} />
           </span>
           <div className="min-w-0">
             <h1 className="font-display text-[19px] font-medium leading-tight">

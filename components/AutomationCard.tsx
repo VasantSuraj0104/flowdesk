@@ -6,10 +6,13 @@ import {
   IconMic,
   IconLock,
 } from "./icons";
-import { Chip } from "./ui";
-import { Automation, TRIGGER_LABEL, ToolIcon } from "@/lib/automations";
+import { FactorsLogo } from "./FactorsLogo";
+import { Automation, ToolIcon } from "@/lib/automations";
 
-const ICONS: Record<ToolIcon, (p: { size?: number }) => JSX.Element> = {
+const ICONS: Record<
+  Exclude<ToolIcon, "factors">,
+  (p: { size?: number }) => JSX.Element
+> = {
   photo: IconPhoto,
   "file-text": IconFileText,
   video: IconVideo,
@@ -17,7 +20,8 @@ const ICONS: Record<ToolIcon, (p: { size?: number }) => JSX.Element> = {
 };
 
 export function AutomationCard({ automation: a }: { automation: Automation }) {
-  const Icon = ICONS[a.icon];
+  const isBrand = a.icon === "factors";
+  const Icon = isBrand ? null : ICONS[a.icon as Exclude<ToolIcon, "factors">];
 
   return (
     <Link
@@ -25,8 +29,12 @@ export function AutomationCard({ automation: a }: { automation: Automation }) {
       className="group flex flex-col bg-surface border border-border rounded-card p-4 transition-colors hover:border-text-muted/50"
     >
       <div className="flex items-start gap-3">
-        <span className="w-10 h-10 rounded-[10px] bg-primary/10 text-primary flex items-center justify-center shrink-0">
-          <Icon size={20} />
+        <span
+          className={`w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 ${
+            isBrand ? "bg-[#FC3B2D]/10" : "bg-primary/10 text-primary"
+          }`}
+        >
+          {isBrand ? <FactorsLogo size={20} /> : Icon ? <Icon size={20} /> : null}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
@@ -50,12 +58,6 @@ export function AutomationCard({ automation: a }: { automation: Automation }) {
           style={{ background: a.status === "enabled" ? "#3DE7DF" : "#8A9099" }}
           aria-label={a.status}
         />
-      </div>
-
-      <div className="flex flex-wrap gap-1.5 mt-3">
-        {a.triggers.map((t) => (
-          <Chip key={t}>{TRIGGER_LABEL[t]}</Chip>
-        ))}
       </div>
 
       <div className="mt-3 pt-3 border-t border-border flex items-center justify-between gap-2">

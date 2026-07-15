@@ -1,5 +1,5 @@
-import { Card, Chip, SectionLabel } from "@/components/ui";
-import { Automation, TRIGGER_LABEL } from "@/lib/automations";
+import { Card, SectionLabel } from "@/components/ui";
+import { Automation } from "@/lib/automations";
 import { IconLock } from "@/components/icons";
 
 export function ComingSoonDetail({ automation: a }: { automation: Automation }) {
@@ -7,11 +7,6 @@ export function ComingSoonDetail({ automation: a }: { automation: Automation }) 
     <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] gap-4 p-5 md:p-[22px] max-w-5xl">
       <Card>
         <SectionLabel>WHAT WE KNOW SO FAR</SectionLabel>
-        <div className="flex flex-wrap gap-1.5 mb-4">
-          {a.triggers.map((t) => (
-            <Chip key={t}>{TRIGGER_LABEL[t]}</Chip>
-          ))}
-        </div>
         <div className="flex justify-between py-2.5 border-b border-border text-[13px]">
           <span className="text-text-muted">Integrations</span>
           <span className="text-right">{a.integrations.join(" · ")}</span>
