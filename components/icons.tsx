@@ -127,3 +127,45 @@ export const IconUpload = (p: IconProps) => (
     <path d="M17 8l-5-5-5 5M12 3v12" />
   </svg>
 );
+
+export const IconFileText = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <path d="M14 2v6h6" />
+    <path d="M8 13h8M8 17h8M8 9h2" />
+  </svg>
+);
+
+export const IconVideo = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="m22 8-6 4 6 4V8z" />
+    <rect x="2" y="6" width="14" height="12" rx="2" />
+  </svg>
+);
+
+export const IconMic = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+    <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
+    <path d="M12 18v4M8 22h8" />
+  </svg>
+);
+
+export const IconLock = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="3" y="11" width="18" height="11" rx="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
+
+export const IconChevronRight = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="m9 18 6-6-6-6" />
+  </svg>
+);
+
+export const IconArrowLeft = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M19 12H5M12 19l-7-7 7-7" />
+  </svg>
+);
