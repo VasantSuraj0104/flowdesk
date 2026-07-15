@@ -7,6 +7,9 @@ export const TEMPLATE_BASE_URL =
   "https://factors-templates.small-band-469e.workers.dev";
 
 export const TYPE_MAP: Record<string, { tpl: string; w: number; h: number }> = {
+  // `text` and `quote` are the same render (same template, same size). The form
+  // only offers "Text post", but `quote` stays here because existing Notion rows
+  // use it and the scheduled path must keep working.
   text: { tpl: "quote", w: 1080, h: 1080 },
   quote: { tpl: "quote", w: 1080, h: 1080 },
   stat: { tpl: "stat", w: 1080, h: 1080 },
