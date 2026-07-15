@@ -5,6 +5,7 @@ import { Button } from "@/components/Button";
 import { Card, SectionLabel, StatusDot } from "@/components/ui";
 import { IconPlay, IconPhoto } from "@/components/icons";
 import { AssetUploader, Asset } from "@/components/AssetUploader";
+import { fetchJson } from "@/lib/safeJson";
 import { RunStatus, STATUS_META } from "@/lib/status";
 
 // These mirror TYPE_MAP and VARIANTS in the workflow's Parse node exactly.
@@ -67,7 +68,8 @@ export function FactorsDetail() {
     ]);
 
     try {
-      const res = await fetch("/api/automations/factors/run", {
+      // fetchJson throws with a legible message (and carries `step`) on failure.
+      const data = await fetchJson("/api/automations/factors/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -78,14 +80,6 @@ export function FactorsDetail() {
           assets: assets.filter((a) => a.status === "done").map((a) => a.url),
         }),
       });
-      const data = await res.json();
-
-      if (!res.ok || !data.ok) {
-        const e = new Error(data.error || `Request failed (${res.status})`);
-        // The engine tells us which step blew up — surface it.
-        (e as Error & { step?: string }).step = data.step;
-        throw e;
-      }
 
       setResult({
         url: data.url,

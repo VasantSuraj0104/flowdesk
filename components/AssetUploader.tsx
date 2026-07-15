@@ -2,6 +2,8 @@
 
 import { useRef, useState } from "react";
 import { IconUpload, IconPhoto } from "@/components/icons";
+import { fetchJson } from "@/lib/safeJson";
+import { prepareImage, formatBytes } from "@/lib/prepareImage";
 
 export interface Asset {
   id: string;
@@ -9,6 +11,7 @@ export interface Asset {
   name: string;
   status: "uploading" | "done" | "error";
   error?: string;
+  note?: string;
 }
 
 export function AssetUploader({
@@ -42,12 +45,26 @@ export function AssetUploader({
     onChange(assetsRef.current);
 
     try {
-      const body = new FormData();
-      body.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body });
-      const data = await res.json();
+      // Shrink oversized images before they hit Vercel's 4.5MB body cap.
+      const prepared = await prepareImage(file);
 
-      if (!res.ok || !data.ok) throw new Error(data.error || "Upload failed");
+      if (prepared.resized) {
+        assetsRef.current = assetsRef.current.map((a) =>
+          a.id === id
+            ? {
+                ...a,
+                note: `Resized ${formatBytes(prepared.originalBytes)} → ${formatBytes(
+                  prepared.finalBytes
+                )}`,
+              }
+            : a
+        );
+        onChange(assetsRef.current);
+      }
+
+      const body = new FormData();
+      body.append("file", prepared.file, prepared.filename);
+      const data = await fetchJson("/api/upload", { method: "POST", body });
 
       assetsRef.current = assetsRef.current.map((a) =>
         a.id === id ? { ...a, url: data.url, status: "done" as const } : a
@@ -65,6 +82,12 @@ export function AssetUploader({
   function handleFiles(files: FileList | null) {
     if (!files) return;
     Array.from(files).forEach(uploadFile);
+  }
+
+  // assets[0] sent to the engine is the first *successful* upload, so labels
+  // must ignore any failed rows above it.
+  function doneIndex(id: string) {
+    return assets.filter((a) => a.status === "done").findIndex((a) => a.id === id);
   }
 
   function remove(id: string) {
@@ -105,7 +128,7 @@ export function AssetUploader({
           Drop images or <span className="text-primary">browse</span>
         </p>
         <p className="text-[12px] text-text-muted text-center">
-          {hint ?? "PNG, JPG, WebP or SVG · up to 5MB each"}
+          {hint ?? "PNG, JPG, WebP or SVG · large images are resized automatically"}
         </p>
         <input
           ref={inputRef}
@@ -150,10 +173,10 @@ export function AssetUploader({
                   }`}
                 >
                   {a.status === "uploading"
-                    ? "Uploading…"
+                    ? a.note ?? "Uploading…"
                     : a.status === "error"
                     ? a.error
-                    : i === 0
+                    : doneIndex(a.id) === 0
                     ? "First — used as headshot"
                     : "Logo"}
                 </span>
