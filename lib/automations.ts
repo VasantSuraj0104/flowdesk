@@ -4,15 +4,13 @@
 // from the filenames you shared and marked `ready: false` — we fill in each
 // one's real config as we build its tool page (or as you share its JSON).
 
-export type TriggerType = "notion" | "sheets" | "webhook" | "schedule" | "voice";
-export type ToolIcon = "photo" | "file-text" | "video" | "mic";
+export type ToolIcon = "factors" | "photo" | "file-text" | "video" | "mic";
 
 export interface Automation {
   slug: string;
   name: string;
   description: string;
   icon: ToolIcon;
-  triggers: TriggerType[];
   integrations: string[];
   status: "enabled" | "draft";
   ready: boolean; // true = has a real tool page; false = placeholder
@@ -21,22 +19,13 @@ export interface Automation {
   successRate?: number;
 }
 
-export const TRIGGER_LABEL: Record<TriggerType, string> = {
-  notion: "Notion",
-  sheets: "Sheets",
-  webhook: "Webhook",
-  schedule: "Schedule",
-  voice: "Voice",
-};
-
 export const AUTOMATIONS: Automation[] = [
   {
     slug: "factors",
     name: "Factors — branded social image",
     description:
-      "Reads Notion pages and renders branded PNG social images from the page fields.",
-    icon: "photo",
-    triggers: ["notion", "schedule"],
+      "Turn a line of copy into an on-brand social image — stats, quotes, testimonials and billboards.",
+    icon: "factors",
     integrations: ["Notion", "Browserless", "Cloudflare"],
     status: "enabled",
     ready: true,
@@ -49,7 +38,6 @@ export const AUTOMATIONS: Automation[] = [
     description:
       "Turns Sheet rows into blog posts, drafted with Claude and published to Webflow and Notion.",
     icon: "file-text",
-    triggers: ["sheets"],
     integrations: ["Sheets", "Claude", "Webflow", "Notion"],
     status: "draft",
     ready: false,
@@ -60,7 +48,6 @@ export const AUTOMATIONS: Automation[] = [
     description:
       "Sheet-driven blog content written with Claude, saved to Drive and delivered to Slack.",
     icon: "file-text",
-    triggers: ["sheets"],
     integrations: ["Sheets", "Claude", "Drive", "Slack"],
     status: "draft",
     ready: false,
@@ -71,7 +58,6 @@ export const AUTOMATIONS: Automation[] = [
     name: "Voice → Blog",
     description: "Converts a voice recording into a structured blog draft.",
     icon: "mic",
-    triggers: ["webhook"],
     integrations: ["Claude"],
     status: "draft",
     ready: false,
@@ -81,7 +67,6 @@ export const AUTOMATIONS: Automation[] = [
     name: "Blog → Videos",
     description: "Generates short videos from published blog content.",
     icon: "video",
-    triggers: ["webhook"],
     integrations: ["Claude"],
     status: "draft",
     ready: false,
@@ -91,7 +76,6 @@ export const AUTOMATIONS: Automation[] = [
     name: "Blog ↔ Video",
     description: "Two-way conversion between blog posts and video scripts.",
     icon: "video",
-    triggers: ["webhook"],
     integrations: ["Claude"],
     status: "draft",
     ready: false,

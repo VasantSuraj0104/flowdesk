@@ -83,7 +83,7 @@ export const TYPE_SCHEMAS: TypeSchema[] = [
       EYEBROW,
       CTA,
     ],
-    assets: "optional",
+    assets: "none",
     background: true,
   },
   {
