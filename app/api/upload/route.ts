@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 
 export const maxDuration = 30;
 
-const MAX_BYTES = 5 * 1024 * 1024; // 5MB
+// Vercel rejects request bodies over 4.5MB at the platform level, before this
+// handler runs. Cap below that so oversized files fail with a readable message.
+// The client (lib/prepareImage.ts) downscales large images before they get here.
+const MAX_BYTES = 4 * 1024 * 1024; // 4MB
 const ALLOWED = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
 
 export async function POST(req: Request) {
@@ -46,7 +49,10 @@ export async function POST(req: Request) {
 
   if (file.size > MAX_BYTES) {
     return NextResponse.json(
-      { ok: false, error: "File is larger than 5MB." },
+      {
+        ok: false,
+        error: `File is ${(file.size / 1048576).toFixed(1)}MB — the limit is 4MB.`,
+      },
       { status: 400 }
     );
   }
