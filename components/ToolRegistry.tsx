@@ -33,8 +33,8 @@ function Row({ a }: { a: Automation }) {
     <Link
       href={`/automations/${a.slug}`}
       className="group relative flex items-center gap-4 py-5 px-3 -mx-3 rounded-xl
-                 transition-colors duration-200 hover:bg-white/[0.03]
-                 focus-visible:bg-white/[0.03] outline-none"
+                 transition-colors duration-200 hover:bg-[var(--surface2)]
+                 focus-visible:bg-[var(--surface2)] outline-none"
     >
       {/* identity dot + mark */}
       <span className="relative flex items-center justify-center w-9 h-9 shrink-0">
@@ -53,7 +53,7 @@ function Row({ a }: { a: Automation }) {
       {/* name + description reveal */}
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
-          <span className="font-display text-[17px] text-text-muted group-hover:text-white transition-colors duration-200 truncate">
+          <span className="font-display text-[17px] text-text-muted group-hover:text-[var(--text)] transition-colors duration-200 truncate">
             {a.name}
           </span>
           {!a.ready && (
@@ -111,7 +111,7 @@ export function ToolRegistry() {
         <p className="text-[11px] uppercase tracking-[0.18em] text-text-faint mb-3">
           Tool registry
         </p>
-        <h1 className="font-display text-[34px] md:text-[42px] leading-[1.05] tracking-tight text-white">
+        <h1 className="font-display text-[34px] md:text-[42px] leading-[1.05] tracking-tight text-[var(--text)]">
           What do you want
           <br />
           to automate?
@@ -132,9 +132,9 @@ export function ToolRegistry() {
       </div>
 
       {/* the registry — a hover-reveal directory, not cards.
-          `[&:hover>a:not(:hover)]:opacity-40` dims the rest of the list while
+          `[&:hover>a:not(:hover)]:opacity-50` dims the rest of the list while
           one row is hovered, spotlighting the active one. */}
-      <div className="flex flex-col divide-y divide-border [&:hover>a:not(:hover)]:opacity-40">
+      <div className="flex flex-col divide-y divide-border [&:hover>a:not(:hover)]:opacity-50">
         {results.map((a) => (
           <Row key={a.slug} a={a} />
         ))}

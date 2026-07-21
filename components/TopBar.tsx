@@ -12,6 +12,7 @@ import {
   IconSettings,
 } from "./icons";
 import { Button } from "./Button";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function TopBar() {
   return (
@@ -23,6 +24,7 @@ export function TopBar() {
         </span>
       </div>
       <div className="ml-auto flex items-center gap-2.5">
+        <ThemeToggle />
         <Button variant="icon" aria-label="Notifications">
           <IconBell size={16} />
         </Button>

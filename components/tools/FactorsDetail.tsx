@@ -178,7 +178,7 @@ export function FactorsDetail() {
                     onClick={() => setBackground(v)}
                     className={`text-xs rounded-md px-2.5 py-1 border transition-colors ${
                       background === v
-                        ? "bg-white text-ink border-white"
+                        ? "bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)]"
                         : "bg-surface2 text-text border-border hover:border-text-muted"
                     }`}
                   >

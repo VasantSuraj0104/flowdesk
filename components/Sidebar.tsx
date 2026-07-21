@@ -54,7 +54,7 @@ export function Sidebar() {
   return (
     <aside className="hidden md:flex w-[200px] shrink-0 bg-sidebar border-r border-border flex-col p-4">
       <div className="flex items-center gap-2.5 px-2.5 pb-4">
-        <span className="w-6 h-6 rounded-[7px] bg-white text-ink flex items-center justify-center shrink-0">
+        <span className="w-6 h-6 rounded-[7px] bg-[var(--accent)] text-[var(--on-accent)] flex items-center justify-center shrink-0">
           <IconBolt size={15} />
         </span>
         <span className="font-display text-[15px] font-medium">flowdesk</span>
