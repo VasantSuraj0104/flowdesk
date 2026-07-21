@@ -64,7 +64,7 @@ export function MobileNav() {
             key={href}
             href={href}
             className={`flex flex-col items-center gap-0.5 text-[11px] px-3 ${
-              active ? "text-primary" : "text-text-muted"
+              active ? "text-white" : "text-text-muted"
             }`}
           >
             <Icon size={20} />

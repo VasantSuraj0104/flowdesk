@@ -40,7 +40,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
           : "text-text-muted hover:text-text hover:bg-surface2/60"
       }`}
     >
-      <span className={active ? "text-primary" : ""}>{item.icon}</span>
+      <span className={active ? "text-white" : ""}>{item.icon}</span>
       {item.label}
     </Link>
   );
@@ -54,7 +54,7 @@ export function Sidebar() {
   return (
     <aside className="hidden md:flex w-[200px] shrink-0 bg-sidebar border-r border-border flex-col p-4">
       <div className="flex items-center gap-2.5 px-2.5 pb-4">
-        <span className="w-6 h-6 rounded-[7px] bg-primary text-primary-on flex items-center justify-center shrink-0">
+        <span className="w-6 h-6 rounded-[7px] bg-white text-ink flex items-center justify-center shrink-0">
           <IconBolt size={15} />
         </span>
         <span className="font-display text-[15px] font-medium">flowdesk</span>
@@ -79,7 +79,7 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-auto flex items-center gap-2.5 p-2.5 border-t border-border">
-        <span className="w-7 h-7 rounded-full bg-primary/15 text-primary flex items-center justify-center text-xs font-medium shrink-0">
+        <span className="w-7 h-7 rounded-full bg-white/10 text-white flex items-center justify-center text-xs font-medium shrink-0">
           AR
         </span>
         <div className="min-w-0">

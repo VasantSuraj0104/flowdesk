@@ -114,7 +114,7 @@ export function FactorsDetail() {
 
   const inputCls =
     "w-full bg-surface2 border border-border rounded-lg px-3 py-2 text-[13px] " +
-    "text-text placeholder:text-text-muted outline-none focus:border-primary transition-colors";
+    "text-text placeholder:text-text-muted outline-none focus:border-white/30 transition-colors";
 
   return (
     <div>
@@ -178,7 +178,7 @@ export function FactorsDetail() {
                     onClick={() => setBackground(v)}
                     className={`text-xs rounded-md px-2.5 py-1 border transition-colors ${
                       background === v
-                        ? "bg-primary text-white border-primary"
+                        ? "bg-white text-ink border-white"
                         : "bg-surface2 text-text border-border hover:border-text-muted"
                     }`}
                   >
@@ -259,7 +259,7 @@ export function FactorsDetail() {
             >
               {busy && (
                 <div className="text-center px-4">
-                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                   <p className="text-[13px] text-text-muted">Rendering…</p>
                 </div>
               )}
@@ -313,7 +313,7 @@ export function FactorsDetail() {
                   href={result.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[12px] text-primary hover:underline truncate flex-1"
+                  className="text-[12px] text-white hover:underline truncate flex-1"
                 >
                   {result.url}
                 </a>

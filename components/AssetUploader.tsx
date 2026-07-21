@@ -119,13 +119,13 @@ export function AssetUploader({
         className={`flex flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed
           px-4 py-5 cursor-pointer transition-colors ${
             dragging
-              ? "border-primary bg-primary/5"
+              ? "border-white/40 bg-white/[0.04]"
               : "border-border bg-surface2 hover:border-text-muted"
           }`}
       >
         <IconUpload size={18} className="text-text-muted" />
         <p className="text-[13px] text-text">
-          Drop images or <span className="text-primary">browse</span>
+          Drop images or <span className="text-white">browse</span>
         </p>
         <p className="text-[12px] text-text-muted text-center">
           {hint ?? "PNG, JPG, WebP or SVG · large images are resized automatically"}
@@ -159,7 +159,7 @@ export function AssetUploader({
                     className="w-full h-full object-cover"
                   />
                 ) : a.status === "uploading" ? (
-                  <span className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <IconPhoto size={15} className="text-danger" />
                 )}
