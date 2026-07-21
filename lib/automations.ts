@@ -17,6 +17,8 @@ export interface Automation {
   locked?: boolean; // your "DO NOT TOUCH" workflows — reference only
   runsToday?: number;
   successRate?: number;
+  /** One identity colour so the monochrome list still tells tools apart. */
+  accent?: string;
 }
 
 export const AUTOMATIONS: Automation[] = [
@@ -31,6 +33,7 @@ export const AUTOMATIONS: Automation[] = [
     ready: true,
     runsToday: 24,
     successRate: 96,
+    accent: "#FC3B2D",
   },
   {
     slug: "linkedin-pulse",
