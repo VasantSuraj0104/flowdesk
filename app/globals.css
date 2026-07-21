@@ -3,43 +3,58 @@
 @tailwind utilities;
 
 /*
-  Fonts: Elms Sans (display) + Google Sans Flex (body) are not on Google Fonts.
-  For production, drop the licensed font files in /public/fonts and wire them
-  up with next/font/local (see lib/fonts.ts for the placeholder). Until then
-  the CSS variables fall back to close matches so nothing breaks.
+  Two themes, one variable set. Default is a pure-black canvas; [data-theme="light"]
+  flips to white. Panels use hairline borders, not grey fills, so both themes read
+  clean and there's no white-on-white or grey-mud.
 */
 :root {
   --font-display: "Elms Sans", "Space Grotesk", sans-serif;
   --font-body: "Google Sans Flex", "Google Sans", system-ui, sans-serif;
+
+  /* dark (default) */
+  --bg: #000000;
+  --sidebar: #000000;
+  --surface: #0B0B0B;
+  --surface2: #111111;
+  --border: #232323;
+  --text: #EDEDED;
+  --text-muted: #8F8F8F;
+  --text-faint: #5A5A5A;
+  --accent: #FFFFFF;      /* white is the action colour */
+  --on-accent: #000000;
+  --ink: #000000;
 }
 
-html {
-  color-scheme: dark;
+[data-theme="light"] {
+  --bg: #FFFFFF;
+  --sidebar: #FFFFFF;
+  --surface: #FAFAFA;
+  --surface2: #F2F2F2;
+  --border: #E4E4E4;
+  --text: #0A0A0A;
+  --text-muted: #6B6B6B;
+  --text-faint: #9A9A9A;
+  --accent: #0A0A0A;      /* action colour flips to near-black on white */
+  --on-accent: #FFFFFF;
+  --ink: #FFFFFF;
 }
+
+html { color-scheme: dark; }
+[data-theme="light"] { color-scheme: light; }
 
 body {
-  background-color: #0A0B0D;
-  color: #EBEBEB;
+  background-color: var(--bg);
+  color: var(--text);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
+  transition: background-color .2s ease, color .2s ease;
 }
 
-/* Thin dark scrollbars to match the app */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #242830 transparent;
+  scrollbar-color: var(--border) transparent;
 }
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-*::-webkit-scrollbar-thumb {
-  background: #242830;
-  border-radius: 8px;
-}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
 
-/* Visible keyboard focus for accessibility */
-:focus-visible {
-  outline: 2px solid #FFFFFF;
-  outline-offset: 2px;
-}
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

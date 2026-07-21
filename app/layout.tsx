@@ -3,6 +3,7 @@ import "./globals.css";
 import { display } from "@/lib/fonts";
 import { Sidebar } from "@/components/Sidebar";
 import { TopBar, MobileNav } from "@/components/TopBar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "flowdesk — automation control",
@@ -16,6 +17,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={display.variable}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=localStorage.getItem('flowdesk-theme');if(t==='light')document.documentElement.dataset.theme='light';}catch(e){}",
+          }}
+        />
+      </head>
       <body className="bg-bg text-text">
         <div className="flex h-screen overflow-hidden">
           <Sidebar />
