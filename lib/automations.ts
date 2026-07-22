@@ -1,10 +1,9 @@
 // Single source of truth for the automations list.
 //
-// `factors` is fully modeled from its n8n JSON. The other five are inferred
-// from the filenames you shared and marked `ready: false` — we fill in each
-// one's real config as we build its tool page (or as you share its JSON).
+// All entries are placeholders (`ready: false`) until each tool page is built
+// or its workflow JSON is shared.
 
-export type ToolIcon = "factors" | "photo" | "file-text" | "video" | "mic";
+export type ToolIcon = "photo" | "file-text" | "video" | "mic";
 
 export interface Automation {
   slug: string;
@@ -22,19 +21,6 @@ export interface Automation {
 }
 
 export const AUTOMATIONS: Automation[] = [
-  {
-    slug: "factors",
-    name: "Factors — branded social image",
-    description:
-      "Turn a line of copy into an on-brand social image — stats, quotes, testimonials and billboards.",
-    icon: "factors",
-    integrations: ["Notion", "Browserless", "Cloudflare"],
-    status: "enabled",
-    ready: true,
-    runsToday: 24,
-    successRate: 96,
-    accent: "#FC3B2D",
-  },
   {
     slug: "linkedin-pulse",
     name: "LinkedIn Pulse — blog generator",
