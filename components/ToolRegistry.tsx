@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AUTOMATIONS, Automation, ToolIcon } from "@/lib/automations";
-import { FactorsLogo } from "./FactorsLogo";
 import {
   IconPhoto,
   IconFileText,
@@ -12,10 +11,7 @@ import {
   IconSearch,
 } from "./icons";
 
-const ICONS: Record<
-  Exclude<ToolIcon, "factors">,
-  (p: { size?: number }) => JSX.Element
-> = {
+const ICONS: Record<ToolIcon, (p: { size?: number }) => JSX.Element> = {
   photo: IconPhoto,
   "file-text": IconFileText,
   video: IconVideo,
@@ -23,8 +19,7 @@ const ICONS: Record<
 };
 
 function ToolMark({ a }: { a: Automation }) {
-  if (a.icon === "factors") return <FactorsLogo size={18} />;
-  const Icon = ICONS[a.icon as Exclude<ToolIcon, "factors">];
+  const Icon = ICONS[a.icon];
   return <Icon size={18} />;
 }
 

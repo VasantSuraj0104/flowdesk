@@ -6,13 +6,9 @@ import {
   IconMic,
   IconLock,
 } from "./icons";
-import { FactorsLogo } from "./FactorsLogo";
 import { Automation, ToolIcon } from "@/lib/automations";
 
-const ICONS: Record<
-  Exclude<ToolIcon, "factors">,
-  (p: { size?: number }) => JSX.Element
-> = {
+const ICONS: Record<ToolIcon, (p: { size?: number }) => JSX.Element> = {
   photo: IconPhoto,
   "file-text": IconFileText,
   video: IconVideo,
@@ -20,8 +16,7 @@ const ICONS: Record<
 };
 
 export function AutomationCard({ automation: a }: { automation: Automation }) {
-  const isBrand = a.icon === "factors";
-  const Icon = isBrand ? null : ICONS[a.icon as Exclude<ToolIcon, "factors">];
+  const Icon = ICONS[a.icon];
 
   return (
     <Link
@@ -29,12 +24,8 @@ export function AutomationCard({ automation: a }: { automation: Automation }) {
       className="group flex flex-col bg-surface border border-border rounded-card p-4 transition-colors hover:border-text-muted/50"
     >
       <div className="flex items-start gap-3">
-        <span
-          className={`w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 ${
-            isBrand ? "bg-[#FC3B2D]/10" : "bg-primary/10 text-primary"
-          }`}
-        >
-          {isBrand ? <FactorsLogo size={20} /> : Icon ? <Icon size={20} /> : null}
+        <span className="w-10 h-10 rounded-[10px] bg-primary/10 text-primary flex items-center justify-center shrink-0">
+          <Icon size={20} />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
