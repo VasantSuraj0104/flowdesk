@@ -44,12 +44,19 @@ export function PulseDetail() {
   const [topic, setTopic] = useState("");
   const [primaryKeyword, setPrimaryKeyword] = useState("");
   const [material, setMaterial] = useState("");
+  const [tier, setTier] = useState<"free" | "premium">("free");
 
   // ---- run state ----
   const [busy, setBusy] = useState(false);
   const [stage, setStage] = useState<"" | "scraping" | "writing">("");
   const [error, setError] = useState<string | null>(null);
-  const [article, setArticle] = useState<{ markdown: string; words: number; ms: number } | null>(null);
+  const [article, setArticle] = useState<{
+    markdown: string;
+    words: number;
+    ms: number;
+    providerLabel?: string;
+    model?: string;
+  } | null>(null);
   const [scrapeNotes, setScrapeNotes] = useState<SourceDoc[]>([]);
   const [copied, setCopied] = useState(false);
 
@@ -117,10 +124,17 @@ export function PulseDetail() {
           primaryKeyword: primaryKeyword.trim() || undefined,
           voice: activeVoice,
           sources,
+          tier,
         }),
       });
 
-      setArticle({ markdown: data.markdown, words: data.words, ms: data.ms });
+      setArticle({
+        markdown: data.markdown,
+        words: data.words,
+        ms: data.ms,
+        providerLabel: data.providerLabel,
+        model: data.model,
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
@@ -287,11 +301,45 @@ export function PulseDetail() {
               </p>
             )}
 
+            <div className="mt-5 mb-3">
+              <label className="block text-[12px] text-text-muted mb-1.5">
+                Model
+              </label>
+              <div className="inline-flex rounded-lg border border-border overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setTier("free")}
+                  className={`text-[12px] px-3 py-1.5 transition-colors ${
+                    tier === "free"
+                      ? "bg-[var(--accent)] text-[var(--on-accent)]"
+                      : "text-text-muted hover:text-text"
+                  }`}
+                >
+                  Free
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTier("premium")}
+                  className={`text-[12px] px-3 py-1.5 border-l border-border transition-colors ${
+                    tier === "premium"
+                      ? "bg-[var(--accent)] text-[var(--on-accent)]"
+                      : "text-text-muted hover:text-text"
+                  }`}
+                >
+                  Premium (Claude)
+                </button>
+              </div>
+              <p className="text-[11px] text-text-faint mt-1.5">
+                {tier === "free"
+                  ? "Free open model — no cost, may be rate-limited under load."
+                  : "Claude — higher quality, uses paid API credits."}
+              </p>
+            </div>
+
             <Button
               variant="primary"
               onClick={runNow}
               disabled={!canRun}
-              className="mt-5"
             >
               <IconPlay size={15} />
               {stage === "scraping"
@@ -328,6 +376,7 @@ export function PulseDetail() {
                   <p className="text-[10px] uppercase tracking-[0.16em] text-text-faint">
                     Article · {article.words} words ·{" "}
                     {(article.ms / 1000).toFixed(1)}s
+                    {article.providerLabel ? ` · ${article.providerLabel}` : ""}
                   </p>
                   <div className="flex items-center gap-2">
                     <button
