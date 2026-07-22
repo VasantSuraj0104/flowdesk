@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAutomation, AUTOMATIONS } from "@/lib/automations";
-import { FactorsDetail } from "@/components/tools/FactorsDetail";
 import { ComingSoonDetail } from "@/components/tools/ComingSoonDetail";
 import { IconArrowLeft } from "@/components/icons";
 
@@ -29,21 +28,15 @@ export default function AutomationDetailPage({
         </Link>
       </div>
 
-      {automation.slug === "factors" ? (
-        <FactorsDetail />
-      ) : (
-        <>
-          <div className="px-4 md:px-[22px] pt-4">
-            <h1 className="font-display text-[22px] font-medium">
-              {automation.name}
-            </h1>
-            <p className="text-[13px] text-text-muted mt-0.5">
-              {automation.description}
-            </p>
-          </div>
-          <ComingSoonDetail automation={automation} />
-        </>
-      )}
+      <div className="px-4 md:px-[22px] pt-4">
+        <h1 className="font-display text-[22px] font-medium">
+          {automation.name}
+        </h1>
+        <p className="text-[13px] text-text-muted mt-0.5">
+          {automation.description}
+        </p>
+      </div>
+      <ComingSoonDetail automation={automation} />
     </div>
   );
 }
