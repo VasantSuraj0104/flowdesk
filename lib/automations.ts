@@ -23,13 +23,14 @@ export interface Automation {
 export const AUTOMATIONS: Automation[] = [
   {
     slug: "linkedin-pulse",
-    name: "LinkedIn Pulse — blog generator",
+    name: "LinkedIn Pulse — article generator",
     description:
-      "Turns Sheet rows into blog posts, drafted with Claude and published to Webflow and Notion.",
+      "Save your writing voice, drop in any sources (URLs or text), and get a publish-ready article in your style.",
     icon: "file-text",
-    integrations: ["Sheets", "Claude", "Webflow", "Notion"],
-    status: "draft",
-    ready: false,
+    integrations: ["Claude"],
+    status: "enabled",
+    ready: true,
+    accent: "#0A66C2",
   },
   {
     slug: "vrushti-blog",

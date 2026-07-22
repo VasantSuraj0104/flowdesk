@@ -20,9 +20,8 @@ export async function fetchJson(
     if (res.status === 404) {
       throw new Error(`Endpoint not found (404) — ${input} isn't deployed yet.`);
     }
-    // Vercel returns a plain-text "Request Entity Too Large" body, not JSON.
     if (res.status === 413 || /request entity too large/i.test(text)) {
-      throw new Error("File too large for the server (4.5MB request limit).");
+      throw new Error("Too large for the server (4.5MB request limit).");
     }
     throw new Error(
       `Server returned an error page (${res.status}) instead of JSON.`
